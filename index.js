@@ -27,6 +27,7 @@ function start (fields) {
 }
 
 connector.logIn = function (fields) {
+  log('info', 'Logging in')
   return rq({
     url: 'https://www.mgen.fr/login-adherent/',
     method: 'POST',
@@ -41,6 +42,7 @@ connector.logIn = function (fields) {
 }
 
 connector.getSectionsUrls = function ($) {
+  log('info', 'Getting sections urls')
   const result = {}
   const $linkMutuelle = $("a[href*='attestation-de-droit-regime-complementaire']")
   const matriceMutuelle = $linkMutuelle.closest('[data-tag-metier-attestations-demarches]').attr('data-matrice')
@@ -65,6 +67,7 @@ function serializedFormToFormData (data) {
 }
 
 connector.fetchRemboursements = function (url, fields) {
+  log('info', 'Fetching remboursements')
   return rq(url)
   .then($ => {
     const $form = $('#formRechercheRemboursements')
@@ -89,7 +92,7 @@ connector.fetchRemboursements = function (url, fields) {
           type: 'health',
           vendor: 'MGEN',
           isRefund: true,
-          indexLigne: tds[0],
+          indexLigne: tds[0], // removed later
           originalDate: moment(tds[1], 'DD/MM/YYYY').toDate(),
           beneficiary: tds[2],
           amount: parseFloat(tds[3].replace(' €', '').replace(',', '.')),
@@ -103,12 +106,13 @@ connector.fetchRemboursements = function (url, fields) {
       formData['tx_mtechremboursement_mtechremboursementsante[rowIdOrder]'] = entries.map(entry => entry.indexLigne).join(',')
       const action = unescape($formDetails.attr('action'))
 
-      return bluebird.mapSeries(entries, entry => connector.fetchDetailsRemboursement(entry, action, formData))
+      return bluebird.map(entries, entry => connector.fetchDetailsRemboursement(entry, action, formData), {concurrency: 5})
     })
   })
 }
 
 connector.fetchDetailsRemboursement = function (entry, action, formData) {
+  log('info', `Fetching details for line ${entry.indexLigne}`)
   formData['tx_mtechremboursement_mtechremboursementsante[indexLigne]'] = entry.indexLigne
   return rq({
     url: baseUrl + action,
@@ -132,15 +136,18 @@ connector.fetchDetailsRemboursement = function (entry, action, formData) {
 
     entry.originalAmount = parseFloat(data['Montant des soins'].replace(' €', '').replace(',', '.'))
 
+    // not used anymore
+    delete entry.indexLigne
+
     return entry
   })
 }
 
 connector.fetchAttestationMutuelle = function (url, fields) {
+  log('info', 'Fetching mutuelle attestation')
   return rq(url)
   .then($ => {
     const script = $('#panelAttestationDroitRO').prev('script').html()
-    log('debug', script, 'script')
     const urls = script.trim().split('\n').map(line => unescape(line.match(/'(.*)'/)[1]))
     log('debug', urls, 'urls')
 
