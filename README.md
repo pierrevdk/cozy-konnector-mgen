@@ -11,7 +11,38 @@ What's Cozy?
 What's this new konnector?
 --------------------------
 
-The konnector gets information from MGEN (french insurance)
+The konnector gets information from MGEN (french insurance).
+
+It gets the "Attestation de mutuelle" and fetches reimbursements information like this :
+
+```javascript
+{
+    "amount":0,
+    "beneficiary":"anonymous",
+    "date":"2017-10-30T23:00:00.000Z",
+    "isRefund":true,
+    "isThirdPartyPayer":true,
+    "originalAmount":14.15,
+    "originalDate":"2017-10-29T23:00:00.000Z",
+    "subtype":"DR TEST",
+    "type":"health",
+    "vendor":"MGEN"
+},
+{
+    "amount":49.8,
+    "beneficiary":"anonymous",
+    "date":"2017-10-30T23:00:00.000Z",
+    "isRefund":true,
+    "originalAmount":130,
+    "originalDate":"2017-10-25T22:00:00.000Z",
+    "subtype":"DR AUTRE",
+    "type":"health",
+    "vendor":"MGEN"
+}
+```
+
+Take a look at the [documentation](https://github.com/cozy/cozy-doctypes/blob/master/docs/io.cozy.bills.md)
+to have the signification of these fields.
 
 ### Open a Pull-Request
 
