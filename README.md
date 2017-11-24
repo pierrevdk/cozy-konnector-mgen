@@ -17,14 +17,15 @@ It gets the "Attestation de mutuelle" and fetches reimbursements information lik
 
 ```javascript
 {
-    "amount":0,
+    "amount":7,
     "beneficiary":"anonymous",
     "date":"2017-10-30T23:00:00.000Z",
     "isRefund":true,
     "isThirdPartyPayer":true,
     "originalAmount":14.15,
     "originalDate":"2017-10-29T23:00:00.000Z",
-    "subtype":"DR TEST",
+    "socialSecurityRefund":4,
+    "subtype":"Prestations diverses",
     "type":"health",
     "vendor":"MGEN"
 },
@@ -35,7 +36,8 @@ It gets the "Attestation de mutuelle" and fetches reimbursements information lik
     "isRefund":true,
     "originalAmount":130,
     "originalDate":"2017-10-25T22:00:00.000Z",
-    "subtype":"DR AUTRE",
+    "socialSecurityRefund":14,
+    "subtype":"Radiologie",
     "type":"health",
     "vendor":"MGEN"
 }
