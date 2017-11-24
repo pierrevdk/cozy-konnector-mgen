@@ -43,7 +43,14 @@ connector.logIn = function (fields) {
   .then(response => {
     if (response.request.uri.pathname === '/services-indisponibles/') throw new Error(errors.VENDOR_DOWN)
 
-    return response.body
+    const $ = response.body
+
+    if ($('.tx-felogin-pi1').length > 0) {
+      log('error', $('.tx-felogin-pi1 .alert-danger').text().trim())
+      throw new Error(errors.LOGIN_FAILED)
+    }
+
+    return $
   })
 }
 
