@@ -173,6 +173,8 @@ connector.fetchDetailsRemboursement = function (entry, action, formData) {
       return memo
     }, {designation: [], remboursementSS: 0, remboursementMGEN: 0})
     entry.amount = round(sums.remboursementMGEN)
+    // remove duplicates
+    sums.designation = Array.from(new Set(sums.designation))
     entry.subtype = sums.designation.join(', ')
     entry.socialSecurityRefund = round(sums.remboursementSS)
 
