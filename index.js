@@ -96,7 +96,7 @@ connector.fetchRemboursements = function (url, fields) {
     })
     .then($ => {
       // table parsing
-      const entries = Array.from($('#tableDernierRemboursement tbody tr')).map(tr => {
+      let entries = Array.from($('#tableDernierRemboursement tbody tr')).map(tr => {
         const tds = Array.from($(tr).find('td')).map(td => {
           return $(td).text().trim()
         })
@@ -108,7 +108,7 @@ connector.fetchRemboursements = function (url, fields) {
           indexLigne: tds[0], // removed later
           originalDate: moment(tds[1], 'DD/MM/YYYY').toDate(),
           beneficiary: tds[2],
-          amount: parseFloat(tds[3].replace(' €', '').replace(',', '.')),
+          amount: convertAmount(tds[3]),
           date: moment(tds[4], 'DD/MM/YYYY').toDate()
         }
       })
@@ -119,9 +119,14 @@ connector.fetchRemboursements = function (url, fields) {
       formData['tx_mtechremboursement_mtechremboursementsante[rowIdOrder]'] = entries.map(entry => entry.indexLigne).join(',')
       const action = unescape($formDetails.attr('action'))
 
-      return bluebird.map(entries, entry => connector.fetchDetailsRemboursement(entry, action, formData), {concurrency: 5})
+      return bluebird.mapSeries(entries, entry => connector.fetchDetailsRemboursement(entry, action, formData))
     })
   })
+}
+
+// convert a string amount to a float
+function convertAmount (amount) {
+  return parseFloat(amount.trim().replace(' €', '').replace(',', '.'))
 }
 
 connector.fetchDetailsRemboursement = function (entry, action, formData) {
@@ -133,27 +138,50 @@ connector.fetchDetailsRemboursement = function (entry, action, formData) {
     formData
   })
   .then($ => {
-    const $table = $('#ajax-details-remboursements table').eq(0).find('tbody')
-    const data = Array.from($table.find('tr')).reduce((memo, tr) => {
+    const $tables = $('#ajax-details-remboursements table')
+    const $tableSummary = $tables.eq(0)
+    const $tableDetails = $tables.eq(1)
+    const data = Array.from($tableSummary.find('tr')).reduce((memo, tr) => {
       const $tds = $(tr).find('td')
       memo[$tds.eq(0).text().trim()] = $tds.eq(1).text().trim()
       return memo
     }, {})
 
-    entry.subtype = data.Prescripteur
-
-    if (data['Remboursement à l\'assuré'] === '0,00 €') {
-      entry.isThirdPartyPayer = true
-      entry.amount = 0
-    }
-
-    entry.originalAmount = parseFloat(data['Montant des soins'].replace(' €', '').replace(',', '.'))
+    entry.originalAmount = convertAmount(data['Montant des soins'])
 
     // not used anymore
     delete entry.indexLigne
 
+    const details = Array.from($tableDetails.find('tbody tr')).map(tr => {
+      const $tds = $(tr).find('td')
+      return {
+        designation: $tds.eq(0).text().trim(),
+        remboursementSS: convertAmount($tds.eq(2).text()),
+        remboursementMGEN: convertAmount($tds.eq(3).text())
+      }
+    })
+
+    if (data['Remboursement à l\'assuré'] === '0,00 €') {
+      entry.isThirdPartyPayer = true
+    }
+
+    // get data from the details table
+    const sums = details.reduce((memo, detail) => {
+      memo.designation.push(detail.designation)
+      memo.remboursementSS += detail.remboursementSS
+      memo.remboursementMGEN += detail.remboursementMGEN
+      return memo
+    }, {designation: [], remboursementSS: 0, remboursementMGEN: 0})
+    entry.amount = round(sums.remboursementMGEN)
+    entry.subtype = sums.designation.join(', ')
+    entry.socialSecurityRefund = round(sums.remboursementSS)
+
     return entry
   })
+}
+
+function round (floatValue) {
+  return Math.round(floatValue * 100) / 100
 }
 
 connector.fetchAttestationMutuelle = function (url, fields) {
