@@ -1,4 +1,4 @@
-const {BaseKonnector, request, log, saveFiles, saveBills} = require('cozy-konnector-libs')
+const {BaseKonnector, request, log, saveFiles, saveBills, errors} = require('cozy-konnector-libs')
 const moment = require('moment')
 const bluebird = require('bluebird')
 
@@ -37,7 +37,13 @@ connector.logIn = function (fields) {
       pass: [fields.password],
       logintype: 'login',
       redirect_url: '/mon-espace-perso/'
-    }
+    },
+    resolveWithFullResponse: true
+  })
+  .then(response => {
+    if (response.request.uri.pathname === '/services-indisponibles/') throw new Error(errors.VENDOR_DOWN)
+
+    return response.body
   })
 }
 
