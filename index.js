@@ -58,9 +58,13 @@ connector.getSectionsUrls = function ($) {
   log('info', 'Getting sections urls')
   const result = {}
   const $linkMutuelle = $("a[href*='attestation-de-droit-regime-complementaire']")
-  const matriceMutuelle = $linkMutuelle.closest('[data-tag-metier-attestations-demarches]').attr('data-matrice')
-  const urlMutuelle = unescape($linkMutuelle.attr('href'))
-  result.mutuelle = `${baseUrl}${urlMutuelle}&codeMatrice=${matriceMutuelle}`
+  if ($linkMutuelle.length) {
+    const matriceMutuelle = $linkMutuelle.closest('[data-tag-metier-attestations-demarches]').attr('data-matrice')
+    const urlMutuelle = unescape($linkMutuelle.attr('href'))
+    result.mutuelle = `${baseUrl}${urlMutuelle}&codeMatrice=${matriceMutuelle}`
+  } else {
+    result.mutuelle = false
+  }
 
   const $linkRemboursements = $("a[href*='mes-remboursements']")
   const matriceRemboursements = $linkRemboursements.closest('[data-tag-metier-remboursements]').attr('data-matrice')
@@ -188,6 +192,12 @@ function round (floatValue) {
 
 connector.fetchAttestationMutuelle = function (url, fields) {
   log('info', 'Fetching mutuelle attestation')
+
+  if (url === false) {
+    log('info', 'No mutuelle attestation to fetch')
+    return Promise.resolve()
+  }
+
   return rq(url)
   .then($ => {
     const script = $('#panelAttestationDroitRO').prev('script').html()
