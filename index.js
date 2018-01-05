@@ -18,7 +18,7 @@ function start (fields) {
   .then(connector.getSectionsUrls)
   .then(sections => {
     return connector.fetchAttestationMutuelle(sections.mutuelle, fields)
-    .then(() => connector.fetchRemboursements(sections.remboursements))
+    .then(() => connector.fetchReimbursements(sections.reimbursements))
   })
   .then(entries => saveBills(entries, fields.folderPath, {
     timeout: Date.now() + 60 * 1000,
@@ -66,10 +66,10 @@ connector.getSectionsUrls = function ($) {
     result.mutuelle = false
   }
 
-  const $linkRemboursements = $("a[href*='mes-remboursements']")
-  const matriceRemboursements = $linkRemboursements.closest('[data-tag-metier-remboursements]').attr('data-matrice')
-  const urlRemboursements = unescape($linkRemboursements.attr('href'))
-  result.remboursements = `${baseUrl}${urlRemboursements}&codeMatrice=${matriceRemboursements}`
+  const $linkReimbursements = $("a[href*='mes-remboursements']")
+  const matriceReimbursements = $linkReimbursements.closest('[data-tag-metier-remboursements]').attr('data-matrice')
+  const urlReimbursements = unescape($linkReimbursements.attr('href'))
+  result.reimbursements = `${baseUrl}${urlReimbursements}&codeMatrice=${matriceReimbursements}`
 
   log('debug', result, 'SectionsUrls')
 
@@ -83,8 +83,8 @@ function serializedFormToFormData (data) {
   }, {})
 }
 
-connector.fetchRemboursements = function (url, fields) {
-  log('info', 'Fetching remboursements')
+connector.fetchReimbursements = function (url, fields) {
+  log('info', 'Fetching reimbursements')
   return rq(url)
   .then($ => {
     // table parsing
@@ -98,7 +98,7 @@ connector.fetchRemboursements = function (url, fields) {
         type: 'health',
         vendor: 'MGEN',
         isRefund: true,
-        indexLigne: tds[0], // removed later
+        indexLine: tds[0], // removed later
         originalDate: moment(tds[1], 'DD/MM/YYYY').toDate(),
         beneficiary: tds[2],
         amount: convertAmount(tds[3]),
@@ -117,10 +117,10 @@ connector.fetchRemboursements = function (url, fields) {
     // try to get details for the first line
     const $formDetails = $('#formDetailsRemboursement')
     const formData = serializedFormToFormData($formDetails.serializeArray())
-    formData['tx_mtechremboursement_mtechremboursementsante[rowIdOrder]'] = entries.map(entry => entry.indexLigne).join(',')
+    formData['tx_mtechremboursement_mtechremboursementsante[rowIdOrder]'] = entries.map(entry => entry.indexLine).join(',')
     const action = unescape($formDetails.attr('action'))
 
-    return bluebird.mapSeries(entries, entry => connector.fetchDetailsRemboursement(entry, action, formData))
+    return bluebird.mapSeries(entries, entry => connector.fetchDetailsReimbursement(entry, action, formData))
   })
 }
 
@@ -129,9 +129,9 @@ function convertAmount (amount) {
   return parseFloat(amount.trim().replace(' €', '').replace(',', '.'))
 }
 
-connector.fetchDetailsRemboursement = function (entry, action, formData) {
-  log('info', `Fetching details for line ${entry.indexLigne}`)
-  formData['tx_mtechremboursement_mtechremboursementsante[indexLigne]'] = entry.indexLigne
+connector.fetchDetailsReimbursement = function (entry, action, formData) {
+  log('info', `Fetching details for line ${entry.indexLine}`)
+  formData['tx_mtechremboursement_mtechremboursementsante[indexLine]'] = entry.indexLine
   return rq({
     url: baseUrl + action,
     method: 'POST',
@@ -150,14 +150,14 @@ connector.fetchDetailsRemboursement = function (entry, action, formData) {
     entry.originalAmount = convertAmount(data['Montant des soins'])
 
     // not used anymore
-    delete entry.indexLigne
+    delete entry.indexLine
 
     const details = Array.from($tableDetails.find('tbody tr')).map(tr => {
       const $tds = $(tr).find('td')
       return {
         designation: $tds.eq(0).text().trim(),
-        remboursementSS: convertAmount($tds.eq(2).text()),
-        remboursementMGEN: convertAmount($tds.eq(3).text())
+        reimbursementSS: convertAmount($tds.eq(2).text()),
+        reimbursementMGEN: convertAmount($tds.eq(3).text())
       }
     })
 
@@ -168,15 +168,15 @@ connector.fetchDetailsRemboursement = function (entry, action, formData) {
     // get data from the details table
     const sums = details.reduce((memo, detail) => {
       memo.designation.push(detail.designation)
-      memo.remboursementSS += detail.remboursementSS
-      memo.remboursementMGEN += detail.remboursementMGEN
+      memo.reimbursementSS += detail.reimbursementSS
+      memo.reimbursementMGEN += detail.reimbursementMGEN
       return memo
-    }, {designation: [], remboursementSS: 0, remboursementMGEN: 0})
-    entry.amount = round(sums.remboursementMGEN)
+    }, {designation: [], reimbursementSS: 0, reimbursementMGEN: 0})
+    entry.amount = round(sums.reimbursementMGEN)
     // remove duplicates
     sums.designation = Array.from(new Set(sums.designation))
     entry.subtype = sums.designation.join(', ')
-    entry.socialSecurityRefund = round(sums.remboursementSS)
+    entry.socialSecurityRefund = round(sums.reimbursementSS)
 
     return entry
   })
