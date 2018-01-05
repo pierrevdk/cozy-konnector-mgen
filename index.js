@@ -87,44 +87,40 @@ connector.fetchRemboursements = function (url, fields) {
   log('info', 'Fetching remboursements')
   return rq(url)
   .then($ => {
-    const $form = $('#formRechercheRemboursements')
-    const formData = serializedFormToFormData($form.serializeArray())
-
-    // update dateDebut to 1 year before
-    formData.dateDebut = moment(formData.dateFin, 'DD/MM/YYYY').subtract(6, 'months').format('DD/MM/YYYY')
-
-    return rq({
-      url: baseUrl + unescape($form.attr('action')),
-      method: 'POST',
-      formData
-    })
-    .then($ => {
-      // table parsing
-      let entries = Array.from($('#tableDernierRemboursement tbody tr')).map(tr => {
-        const tds = Array.from($(tr).find('td')).map(td => {
-          return $(td).text().trim()
-        })
-
-        return {
-          type: 'health',
-          vendor: 'MGEN',
-          isRefund: true,
-          indexLigne: tds[0], // removed later
-          originalDate: moment(tds[1], 'DD/MM/YYYY').toDate(),
-          beneficiary: tds[2],
-          amount: convertAmount(tds[3]),
-          date: moment(tds[4], 'DD/MM/YYYY').toDate()
-        }
+    // table parsing
+    let entries = Array.from($('#tableDernierRemboursement tbody tr')).map(tr => {
+      const tds = Array.from($(tr).find('td')).map(td => {
+        return $(td).text().trim()
       })
 
-      // try to get details for the first line
-      const $formDetails = $('#formDetailsRemboursement')
-      const formData = serializedFormToFormData($formDetails.serializeArray())
-      formData['tx_mtechremboursement_mtechremboursementsante[rowIdOrder]'] = entries.map(entry => entry.indexLigne).join(',')
-      const action = unescape($formDetails.attr('action'))
+      const date = moment(tds[4], 'DD/MM/YYYY')
+      const entry = {
+        type: 'health',
+        vendor: 'MGEN',
+        isRefund: true,
+        indexLigne: tds[0], // removed later
+        originalDate: moment(tds[1], 'DD/MM/YYYY').toDate(),
+        beneficiary: tds[2],
+        amount: convertAmount(tds[3]),
+        date: date.toDate()
+      }
 
-      return bluebird.mapSeries(entries, entry => connector.fetchDetailsRemboursement(entry, action, formData))
+      const $pdfLink = $(tr).find('.pdf_download')
+      if ($pdfLink.length) {
+        entry.fileurl = (baseUrl + unescape($pdfLink.attr('href')))
+        entry.filename = `${date.format('YYYYMM')}_mgen.pdf`
+      }
+
+      return entry
     })
+
+    // try to get details for the first line
+    const $formDetails = $('#formDetailsRemboursement')
+    const formData = serializedFormToFormData($formDetails.serializeArray())
+    formData['tx_mtechremboursement_mtechremboursementsante[rowIdOrder]'] = entries.map(entry => entry.indexLigne).join(',')
+    const action = unescape($formDetails.attr('action'))
+
+    return bluebird.mapSeries(entries, entry => connector.fetchDetailsRemboursement(entry, action, formData))
   })
 }
 
@@ -214,12 +210,7 @@ connector.fetchAttestationMutuelle = function (url, fields) {
     })
     .then(() => ({
       fileurl: baseUrl + urls[1],
-      filename: 'Attestation_mutuelle.pdf',
-      requestOptions: {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:36.0) Gecko/20100101 Firefox/36.0'
-        }
-      }
+      filename: 'Attestation_mutuelle.pdf'
     }))
   })
   .then(entry => saveFiles([entry], fields))
