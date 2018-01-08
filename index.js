@@ -88505,7 +88505,6 @@ class baseKonnector {
    * Hook called when the connector fails
    */
   fail (err) {
-    console.log(err, 'error details')
     log('warn', 'Error caught by BaseKonnector')
     this.terminate(err.message || err)
   }
