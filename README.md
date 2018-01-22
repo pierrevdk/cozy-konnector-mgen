@@ -13,38 +13,28 @@ What's this new konnector?
 
 The konnector gets information from MGEN (french insurance).
 
-It gets the "Attestation de mutuelle" and fetches reimbursements information like this :
+What data is imported ?
+-----------------------
 
-```javascript
-{
-    "amount":7,
-    "beneficiary":"anonymous",
-    "date":"2017-10-30T23:00:00.000Z",
-    "isRefund":true,
-    "isThirdPartyPayer":true,
-    "originalAmount":14.15,
-    "originalDate":"2017-10-29T23:00:00.000Z",
-    "socialSecurityRefund":4,
-    "subtype":"Prestations diverses",
-    "type":"health",
-    "vendor":"MGEN"
-},
-{
-    "amount":49.8,
-    "beneficiary":"anonymous",
-    "date":"2017-10-30T23:00:00.000Z",
-    "isRefund":true,
-    "originalAmount":130,
-    "originalDate":"2017-10-25T22:00:00.000Z",
-    "socialSecurityRefund":14,
-    "subtype":"Radiologie",
-    "type":"health",
-    "vendor":"MGEN"
-}
-```
+This konnector imports the list of reimbursements metadata that you can see in the ["Mes remboursement"](https://www.mgen.fr/mon-espace-perso/mes-remboursements/?codeMatrice=1) page. It uses the detailed view (+ de détails) for each line.
+
+For each reimbursement, an associated PDF bill is downloaded (many reimbursements can have the
+same associated file and the file is only downloaded once.
+
+If you do not have a "Relevé" column in the "Mes remboursements" page, it means that you don't have the "Relevés de
+prestation" option activated (it is not activated by default). If you activate it. The next
+reimbursement bill for the next month will appear when ready but old reimbursements won't be
+changed to pdf...
+
+Each health care is separated because we suppose each health care will be reimbursed individually by the MGEN
+and it makes it easier to link it with a bank operation with the same amount.
+
+An example of imported data can be seen in [./importedData.json](./importedData.json)
+
+The "Attestation de mutuelle" is also fetched.
 
 Take a look at the [documentation](https://github.com/cozy/cozy-doctypes/blob/master/docs/io.cozy.bills.md)
-to have the signification of these fields.
+to have the signification of the fields in this file.
 
 ### Open a Pull-Request
 

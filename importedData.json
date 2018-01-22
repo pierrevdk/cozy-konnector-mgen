@@ -1,0 +1,36 @@
+[
+  {
+    "type": "health",
+    "vendor": "MGEN",
+    "isRefund": true,
+    "originalDate": "2018-01-01T23:00:00.000Z",
+    "beneficiary": "user1",
+    "amount": 7.5,
+    "date": "2018-01-02T23:00:00.000Z",
+    "fileurl": "https://www.mgen.fr/mon-espace-perso/mes-remboursements/?urlReleve=XXXXXXX\nXXXXX==&dattrait=2018-01-03T11:00:00.000Z&dateReleve=2018-01-04T11:00:00.000Z&tx_mtechremboursement_mtechremboursementsante[action]=telechargerPDF&tx_mtechremboursement_mtechremboursementsante[controller]=RemboursementSante&cHash=XXXXXXXXXX",
+    "filename": "201801_mgen.pdf",
+    "originalAmount": 25,
+    "isThirdPartyPayer": true,
+    "subtype": "Prestations diverses",
+    "socialSecurityRefund": 16.5,
+    "invoice": "io.cozy.files:05d71c48116c59d9808c51dfa37a17f85",
+    "_id": "05d71c48116c59d9808c51dfa37a7f70"
+  },
+  {
+    "type": "health",
+    "vendor": "MGEN",
+    "isRefund": true,
+    "originalDate": "2018-01-01T23:00:00.000Z",
+    "beneficiary": "user1",
+    "amount": 7.5,
+    "date": "2018-01-02T23:00:00.000Z",
+    "fileurl": "https://www.mgen.fr/mon-espace-perso/mes-remboursements/?urlReleve=XXXXXXX\nXXXXX==&dattrait=2018-01-03T11:00:00.000Z&dateReleve=2018-01-04T11:00:00.000Z&tx_mtechremboursement_mtechremboursementsante[action]=telechargerPDF&tx_mtechremboursement_mtechremboursementsante[controller]=RemboursementSante&cHash=XXXXXXXXXX",
+    "filename": "201801_mgen.pdf",
+    "originalAmount": 25,
+    "isThirdPartyPayer": false,
+    "subtype": "Généraliste",
+    "socialSecurityRefund": 16.5,
+    "invoice": "io.cozy.files:05d71c48116c59d9808c51dfa37a17f85",
+    "_id": "05d71c48116c59d9808c51dfa37a7f70"
+  }
+]
