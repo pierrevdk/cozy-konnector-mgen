@@ -8,10 +8,10 @@ What's Cozy?
 
 [Cozy] is a platform that brings all your web services in the same private space. With it, your webapps and your devices can share data easily, providing you with a new experience. You can install Cozy on your own hardware where no one's tracking you.
 
-What's this new konnector?
+What's this konnector?
 --------------------------
 
-The konnector gets information from MGEN (french insurance).
+The konnector gets information from [MGEN][mgen] (french national insurance).
 
 What data is imported ?
 -----------------------
@@ -20,11 +20,6 @@ This konnector imports the list of reimbursements metadata that you can see in t
 
 For each reimbursement, an associated PDF bill is downloaded (many reimbursements can have the
 same associated file and the file is only downloaded once.
-
-If you do not have a "Relevé" column in the "Mes remboursements" page, it means that you don't have the "Relevés de
-prestation" option activated (it is not activated by default). If you activate it. The next
-reimbursement bill for the next month will appear when ready but old reimbursements won't be
-changed to pdf...
 
 Each health care is separated because we suppose each health care will be reimbursed individually by the MGEN
 and it makes it easier to link it with a bank operation with the same amount.
@@ -35,6 +30,14 @@ The "Attestation de mutuelle" is also fetched.
 
 Take a look at the [documentation](https://github.com/cozy/cozy-doctypes/blob/master/docs/io.cozy.bills.md)
 to have the signification of the fields in this file.
+
+
+### Known problems
+
+If you do not have a "Relevé" column in the "Mes remboursements" page, it means that you don't have the "Relevés de
+prestation" option activated (it is not activated by default). If you activate it. The next
+reimbursement bill for the next month will appear when ready but old reimbursements won't be
+changed to pdf...
 
 ### Open a Pull-Request
 
@@ -189,5 +192,4 @@ MGEN connector is developed by Christophe Thiriot and distributed under the [AGP
 [webpack]: https://webpack.js.org
 [yarn]: https://yarnpkg.com
 [travis]: https://travis-ci.org
-
-Big big thanks to [Gara64](https://github.com/gara64), who created this konnector in v2. I used his code a lot.
+[mgen]: https://www.mgen.fr/login-adherent/
