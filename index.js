@@ -1,8 +1,8 @@
-const {BaseKonnector, request, log, saveFiles, saveBills, errors} = require('cozy-konnector-libs')
+const {BaseKonnector, requestFactory, log, saveFiles, saveBills, errors} = require('cozy-konnector-libs')
 const moment = require('moment')
 const bluebird = require('bluebird')
 
-let rq = request({
+let request = requestFactory({
   cheerio: true,
   json: false,
   // debug: true,
@@ -28,7 +28,7 @@ function start (fields) {
 
 connector.logIn = function (fields) {
   log('info', 'Logging in')
-  return rq({
+  return request({
     url: 'https://www.mgen.fr/login-adherent/',
     method: 'POST',
     formData: {
@@ -48,6 +48,12 @@ connector.logIn = function (fields) {
     if ($('.tx-felogin-pi1').length > 0) {
       log('error', $('.tx-felogin-pi1 .alert-danger').text().trim())
       throw new Error(errors.LOGIN_FAILED)
+    }
+
+    const $tutoForm = $('#quitterTuto')
+    if ($tutoForm.length) {
+      log('error', 'You should definitively ignore the tutorial in your space')
+      throw new Error(errors.USER_ACTION_NEEDED)
     }
 
     return $
@@ -85,7 +91,7 @@ function serializedFormToFormData (data) {
 
 connector.fetchReimbursements = function (url, fields) {
   log('info', 'Fetching reimbursements')
-  return rq(url)
+  return request(url)
   .then($ => {
     // table parsing
     let entries = Array.from($('#tableDernierRemboursement tbody tr')).map(tr => {
@@ -132,7 +138,7 @@ function convertAmount (amount) {
 connector.fetchDetailsReimbursement = function (entry, action, formData) {
   log('info', `Fetching details for line ${entry.indexLine}`)
   formData['tx_mtechremboursement_mtechremboursementsante[indexLine]'] = entry.indexLine
-  return rq({
+  return request({
     url: baseUrl + action,
     method: 'POST',
     formData
@@ -194,13 +200,13 @@ connector.fetchAttestationMutuelle = function (url, fields) {
     return Promise.resolve()
   }
 
-  return rq(url)
+  return request(url)
   .then($ => {
     const script = $('#panelAttestationDroitRO').prev('script').html()
     const urls = script.trim().split('\n').map(line => unescape(line.match(/'(.*)'/)[1]))
     log('debug', urls, 'urls')
 
-    return rq({
+    return request({
       method: 'POST',
       url: baseUrl + urls[0],
       formData: {
